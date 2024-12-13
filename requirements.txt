@@ -1,0 +1,5 @@
+pysyncobj
+cryptography
+zmq
+lz4
+dill
