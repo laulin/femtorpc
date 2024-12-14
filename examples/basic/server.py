@@ -5,7 +5,7 @@ if __name__ == "__main__":
     def foo(x)->int:
         return x + 1
     
-    daemon.register("foo", foo)
+    daemon.register(foo, "foo")
 
     try:
         while True:

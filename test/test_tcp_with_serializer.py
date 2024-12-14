@@ -36,7 +36,7 @@ class TestTCPWithSeriliazer(unittest.TestCase):
         def foo(x)->int:
             return x + 1
         
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             proxy = TCPProxy("127.0.0.1", 6666, 100)
@@ -54,7 +54,7 @@ class TestTCPWithSeriliazer(unittest.TestCase):
         def foo(x)->int:
             return x + 1
         
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             proxy = TCPProxy("127.0.0.1", 6666, 100, **get_serializer(compressed=True))
@@ -72,7 +72,7 @@ class TestTCPWithSeriliazer(unittest.TestCase):
         def foo(x)->int:
             return x + 1
         
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             with TCPProxy("127.0.0.1", 6666, 100, **get_serializer(key=KEY)) as proxy:
@@ -88,7 +88,7 @@ class TestTCPWithSeriliazer(unittest.TestCase):
         def foo(x)->int:
             return x + 1
         
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             with TCPProxy("127.0.0.1", 6666, 100, **get_serializer(key=KEY, compressed=True)) as proxy:

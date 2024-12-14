@@ -15,8 +15,8 @@ class TCPDaemon:
         self._poller = zmq.Poller()
         self._poller.register(self._socket, zmq.POLLIN)
 
-    def register(self, name:str, obj:object):
-        self._command_hander.register(name, obj)
+    def register(self, obj:object, name:str):
+        self._command_hander.register(obj, name)
 
     def run_once(self, timeout:int=100, ignore_timeout:bool=False):
         socks = dict(self._poller.poll(timeout))

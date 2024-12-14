@@ -8,7 +8,7 @@ class TestWrapper(unittest.TestCase):
             return [a,b,c]
         
         wrapper = Wrapper()
-        wrapper.register("foo", foo)
+        wrapper.register(foo, "foo")
 
     def test_register_object(self):
         class Bar:
@@ -21,14 +21,14 @@ class TestWrapper(unittest.TestCase):
         bar = Bar("test")
         
         wrapper = Wrapper()
-        wrapper.register("bar", bar)
+        wrapper.register(bar, "bar")
 
     def test_call_function(self):
         def foo(a:int, b:str, c)->list:
             return [a,b,c]
         
         wrapper = Wrapper()
-        wrapper.register("foo", foo)
+        wrapper.register(foo, "foo")
 
         results = wrapper.call("foo", 1, "2", 3)
         expected = ([1, "2", 3], None)
@@ -41,7 +41,7 @@ class TestWrapper(unittest.TestCase):
             return [a,b,c]
         
         wrapper = Wrapper()
-        wrapper.register("foo", foo)
+        wrapper.register(foo, "foo")
 
         results = wrapper.call("foo", 1, "2")
         
@@ -54,7 +54,7 @@ class TestWrapper(unittest.TestCase):
             return [a,b,c]
         
         wrapper = Wrapper()
-        wrapper.register("foo", foo)
+        wrapper.register(foo, "foo")
 
         results = wrapper.call("foo", 1, 2, 3)
         

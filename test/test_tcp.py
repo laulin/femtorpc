@@ -34,7 +34,7 @@ class TestTCP(unittest.TestCase):
         def foo(x)->int:
             return x + 1
         
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             proxy = TCPProxy("127.0.0.1", 6666, 100)
@@ -52,7 +52,7 @@ class TestTCP(unittest.TestCase):
         def foo(x)->int:
             return x + 1
         
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             with TCPProxy("127.0.0.1", 6666, 100) as proxy:
@@ -70,7 +70,7 @@ class TestTCP(unittest.TestCase):
                 return x + y
             return bar
         
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             with TCPProxy("127.0.0.1", 6666, 100) as proxy:
@@ -90,7 +90,7 @@ class TestTCP(unittest.TestCase):
             for i in range(3):
                 yield i
         
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
             with TCPProxy("127.0.0.1", 6666, 100) as proxy:
                 result = [i for i in proxy.foo()]
@@ -106,7 +106,7 @@ class TestTCP(unittest.TestCase):
                 return 666
         
         myfoo = foo()
-        daemon.register("foo", myfoo)
+        daemon.register(myfoo, "foo")
         with DaemonThread(daemon) as thread:
             with TCPProxy("127.0.0.1", 6666, 100) as proxy:
                 result = proxy.foo.bar()
@@ -120,7 +120,7 @@ class TestTCP(unittest.TestCase):
         def foo(x:bytes)->int:
             return len(x)
         
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         SIZE = 1024*1024*10
         data = b"0"*SIZE
         with DaemonThread(daemon) as thread:

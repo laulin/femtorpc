@@ -12,7 +12,7 @@ class TestCommandHandler(unittest.TestCase):
         def foo(x)->int:
             return x + 1
 
-        command_hander.register("foo", foo)
+        command_hander.register(foo, "foo")
         result = proxy_handler.call("foo", 10)
         self.assertEqual(result, 11)
 
@@ -25,7 +25,7 @@ class TestCommandHandler(unittest.TestCase):
                 return x + y
             return bar
 
-        command_hander.register("foo", foo)
+        command_hander.register(foo, "foo")
         result = proxy_handler.call("foo", 10)
         self.assertTrue(isinstance(result, Function))
 
@@ -36,7 +36,7 @@ class TestCommandHandler(unittest.TestCase):
         def foo():
             raise Exception("Nope")
 
-        command_hander.register("foo", foo)
+        command_hander.register(foo, "foo")
         with self.assertRaises(Exception) as context:
             proxy_handler.call("foo")
         

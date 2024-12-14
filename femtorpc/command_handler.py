@@ -15,8 +15,8 @@ class CommandHandler:
         self._dumps = dumps
         self._log = logging.getLogger(self.__class__.__name__)
 
-    def register(self, name:str, obj:object):
-        self._wrapper.register(name, obj)
+    def register(self, obj:object, name:str):
+        self._wrapper.register(obj, name)
 
     def call(self, data_stream:bytes)->bytes:
         command = self._loads(data_stream)

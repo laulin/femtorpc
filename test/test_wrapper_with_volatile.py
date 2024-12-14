@@ -9,7 +9,7 @@ class TestWrapperWithVolatile(unittest.TestCase):
             for i in range(3):
                 yield i
         wrapper = WrapperWithVolatile()
-        wrapper.register("foo", foo)
+        wrapper.register(foo, "foo")
 
         results = wrapper.call("foo")
 
@@ -22,7 +22,7 @@ class TestWrapperWithVolatile(unittest.TestCase):
             return bar
         
         wrapper = WrapperWithVolatile()
-        wrapper.register("foo", foo)
+        wrapper.register(foo, "foo")
 
         results = wrapper.call("foo", "1")
 
@@ -33,7 +33,7 @@ class TestWrapperWithVolatile(unittest.TestCase):
             for i in range(3):
                 yield i
         wrapper = WrapperWithVolatile()
-        wrapper.register("foo", foo)
+        wrapper.register(foo, "foo")
 
         generator, _ = wrapper.call("foo")
         
@@ -45,7 +45,7 @@ class TestWrapperWithVolatile(unittest.TestCase):
             for i in range(3):
                 yield i
         wrapper = WrapperWithVolatile()
-        wrapper.register("foo", foo)
+        wrapper.register(foo, "foo")
 
         generator, _ = wrapper.call("foo")
         
@@ -57,7 +57,7 @@ class TestWrapperWithVolatile(unittest.TestCase):
             for i in range(3):
                 yield i
         wrapper = WrapperWithVolatile()
-        wrapper.register("foo", foo)
+        wrapper.register(foo, "foo")
 
         generator, _ = wrapper.call("foo")
         
@@ -71,7 +71,7 @@ class TestWrapperWithVolatile(unittest.TestCase):
             for i in range(3):
                 yield i
         wrapper = WrapperWithVolatile()
-        wrapper.register("foo", foo)
+        wrapper.register(foo, "foo")
 
         generator, _ = wrapper.call("foo")
         
@@ -88,7 +88,7 @@ class TestWrapperWithVolatile(unittest.TestCase):
             return bar
         
         wrapper = WrapperWithVolatile()
-        wrapper.register("foo", foo)
+        wrapper.register(foo, "foo")
 
         closure, _ = wrapper.call("foo", "1")
         
@@ -106,7 +106,7 @@ class TestWrapperWithVolatile(unittest.TestCase):
             return bar
         
         wrapper = WrapperWithVolatile()
-        wrapper.register("foo", foo)
+        wrapper.register(foo, "foo")
 
         result, _ = wrapper.call("foo", 1)
         result2, _ = wrapper.call(f"{result.id}", 10) # bar

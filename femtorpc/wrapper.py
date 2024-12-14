@@ -36,7 +36,7 @@ class Wrapper:
         
         return wrapper
     
-    def register(self, name:str, obj:object):
+    def register(self, obj:object, name:str):
         if name.startswith("_"):
             raise Exception("Protected or private function can't be registered")
         
@@ -54,7 +54,7 @@ class Wrapper:
             }
             for member_name, member_callable in inspect.getmembers(obj):
                 if not member_name.startswith("_"):  
-                    self.register(name+"."+member_name, member_callable)
+                    self.register(member_callable, name+"."+member_name)
         else:
             raise Exception("object type is not supported")
 

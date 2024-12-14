@@ -38,7 +38,7 @@ class Benchmark(unittest.TestCase):
         def foo(x)->int:
             return x + 1
         
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             with TCPProxy("127.0.0.1", 6666, 100) as proxy:
@@ -60,7 +60,7 @@ class Benchmark(unittest.TestCase):
             return len(x)
         
         payload = b"0"*1024*1024*10 # 10MB
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             with TCPProxy("127.0.0.1", 6666, 100) as proxy:
@@ -82,7 +82,7 @@ class Benchmark(unittest.TestCase):
         def foo(x)->int:
             return x + 1
         
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             with TCPProxy("127.0.0.1", 6666, 100, **serial_params) as proxy:
@@ -105,7 +105,7 @@ class Benchmark(unittest.TestCase):
             return len(x)
         
         payload = b"0"*1024*1024*10 # 10MB
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             with TCPProxy("127.0.0.1", 6666, 100, **serial_params) as proxy:
@@ -127,7 +127,7 @@ class Benchmark(unittest.TestCase):
         def foo(x)->int:
             return x + 1
         
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             with TCPProxy("127.0.0.1", 6666, 100, **serial_params) as proxy:
@@ -150,7 +150,7 @@ class Benchmark(unittest.TestCase):
             return len(x)
         
         payload = b"0"*1024*1024*10 # 10MB
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             with TCPProxy("127.0.0.1", 6666, 1000, **serial_params) as proxy:
@@ -172,7 +172,7 @@ class Benchmark(unittest.TestCase):
         def foo(x)->int:
             return x + 1
         
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             with TCPProxy("127.0.0.1", 6666, 100, **serial_params) as proxy:
@@ -195,7 +195,7 @@ class Benchmark(unittest.TestCase):
             return len(x)
         
         payload = b"0"*1024*1024*10 # 10MB
-        daemon.register("foo", foo)
+        daemon.register(foo, "foo")
         with DaemonThread(daemon) as thread:
 
             with TCPProxy("127.0.0.1", 6666, 1000, **serial_params) as proxy:

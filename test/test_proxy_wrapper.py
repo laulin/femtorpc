@@ -10,7 +10,7 @@ class TestProxyWrapper(unittest.TestCase):
             return x + 1
         
         command_hander = CommandHandler()
-        command_hander.register("foo", foo)
+        command_hander.register(foo, "foo")
 
         proxy_wrapper = ProxyWrapper(command_hander.call)
 
@@ -24,7 +24,7 @@ class TestProxyWrapper(unittest.TestCase):
             return bar
         
         command_hander = CommandHandler()
-        command_hander.register("foo", foo)
+        command_hander.register(foo, "foo")
 
         proxy_wrapper = ProxyWrapper(command_hander.call)
 
@@ -37,7 +37,7 @@ class TestProxyWrapper(unittest.TestCase):
                 yield i
         
         command_hander = CommandHandler()
-        command_hander.register("foo", foo)
+        command_hander.register(foo, "foo")
 
         proxy_wrapper = ProxyWrapper(command_hander.call)
 
@@ -51,7 +51,7 @@ class TestProxyWrapper(unittest.TestCase):
                 yield i
         
         command_hander = CommandHandler()
-        command_hander.register("foo", foo)
+        command_hander.register(foo, "foo")
 
         proxy_wrapper = ProxyWrapper(command_hander.call)
 
@@ -66,7 +66,7 @@ class TestProxyWrapper(unittest.TestCase):
         
         local_foo = foo()
         command_hander = CommandHandler()
-        command_hander.register("foo", local_foo)
+        command_hander.register(local_foo, "foo")
 
         proxy_wrapper = ProxyWrapper(command_hander.call)
 
