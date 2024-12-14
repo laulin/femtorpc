@@ -36,7 +36,13 @@ class Wrapper:
         
         return wrapper
     
-    def register(self, obj:object, name:str):
+    def register(self, obj:object, name:str=None):
+        if name is None:
+            try:
+                name = obj.__name__
+            except AttributeError:
+                raise Exception("Object must have an attribute __name__ or an explicite via the name parameter")
+            
         if name.startswith("_"):
             raise Exception("Protected or private function can't be registered")
         

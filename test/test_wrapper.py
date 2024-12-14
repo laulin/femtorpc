@@ -60,3 +60,28 @@ class TestWrapper(unittest.TestCase):
         
 
         self.assertTrue(isinstance(results[1], TypeError))
+
+    def test_register_functon_wo_name(self):
+        def foo(a:int, b:int)->int:
+            return a+b
+        
+        wrapper = Wrapper()
+        wrapper.register(foo)
+
+        result = wrapper.call("foo", 1, 2)
+        self.assertEqual(result, (3, None))
+
+    def test_register_object_wo_name(self):
+        class Bar:
+            def __init__(self, xxx:str):
+                self._xxx = xxx
+            
+            def f(self)->str:
+                return self._xxx
+            
+        bar = Bar("test")
+        
+        wrapper = Wrapper()
+        # bar doesn't have a name (just a reference)
+        with self.assertRaises(Exception) as context:
+            wrapper.register(bar)
