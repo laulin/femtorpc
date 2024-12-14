@@ -5,7 +5,13 @@ if __name__ == "__main__":
     def foo(x)->int:
         return x + 1
     
-    daemon.register(foo, "foo")
+    class Stuff:
+        def reverse(self, data:str)->str:
+            return data[::-1]
+    
+    daemon.register(foo)
+    stuff = Stuff()
+    daemon.register(stuff, "my_object")
 
     try:
         while True:
