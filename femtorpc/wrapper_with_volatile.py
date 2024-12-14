@@ -54,7 +54,7 @@ class WrapperWithVolatile(Wrapper):
                 return_value = self._register_volatile(return_value, Function)
 
 
-            if isinstance(exception, StopIteration):
+            if isinstance(exception, Exception):
                 del self._volatiles[object_id]
             return return_value, exception
         except Exception as e:
