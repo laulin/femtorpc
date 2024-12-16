@@ -128,3 +128,38 @@ class TestWrapperWithVolatile(unittest.TestCase):
         result3, _ = wrapper.call(f"{result2.id}") # stuff
 
         self.assertEqual(result3, 11)
+
+    def test_closure_exception(self):
+        def foo(x):
+            def bar(y)->int:
+                if y == 0:
+                    raise ValueError("y must be greater than 0")
+                return x+y
+            return bar
+        
+        wrapper = WrapperWithVolatile()
+        wrapper.register(foo, "foo")
+
+        bar, _ = wrapper.call("foo", 10)
+        # we make crach the closure
+        try:
+            wrapper.call(f"{bar.id}", 0)
+        except ValueError:
+            pass
+        result, _ = wrapper.call(f"{bar.id}", 1)
+        self.assertEqual(result, 11)
+
+    def test_generator_exception(self):
+        def foo():
+            yield 0
+        wrapper = WrapperWithVolatile()
+        wrapper.register(foo, "foo")
+
+        generator, _ = wrapper.call("foo")
+        
+        wrapper.call(f"{generator.id}.__next__") # 0
+        wrapper.call(f"{generator.id}.__next__") # stop iteration
+        _, result = wrapper.call(f"{generator.id}.__next__")
+
+        self.assertIsInstance(result, AttributeError)
+        

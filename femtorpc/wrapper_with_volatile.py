@@ -20,7 +20,7 @@ class WrapperWithVolatile(Wrapper):
         if len(self._volatiles) >= self._max_volatile:
             raise OverflowError(f"Max volatile reaches")
         
-        self._volatiles[result_id] = result
+        self._volatiles[result_id] = (result, as_object)
         return as_object(result_id)
     
     def _call_volatile(self, name, *args, **kwargs)->Tuple[Union[object, None], Union[Exception, None]]:
@@ -36,7 +36,7 @@ class WrapperWithVolatile(Wrapper):
             return None, None
         
         try:
-            obj = self._volatiles[object_id]
+            obj, obj_type = self._volatiles[object_id]
             if function_name is not None:
                 function = getattr(obj, function_name)
             else:
@@ -53,8 +53,7 @@ class WrapperWithVolatile(Wrapper):
             if inspect.isfunction(return_value):
                 return_value = self._register_volatile(return_value, Function)
 
-
-            if isinstance(exception, Exception):
+            if isinstance(exception, Exception) and obj_type is Generator:
                 del self._volatiles[object_id]
             return return_value, exception
         except Exception as e:
