@@ -60,7 +60,7 @@ No method or function whose name starts "_" (protected or private) can be regist
 
 Generator is a powerful python toy, efficient for lazyness. And we love be lazy ! In FemtoRPC, generator object stay in the server side and are proxified to the client. Generators are destoyed when an exception is raised or if the proxy is closed.
 
-https://realpython.com/introduction-to-python-generators/
+For more information about generators, you can read this [guide](https://realpython.com/introduction-to-python-generators/).
 
 client :
 
@@ -136,6 +136,46 @@ if __name__ == "__main__":
 
 Another object that require a context is a function created and returned by another function, aka a closure. Since it needs a context, the closure is store in server side and the client only works with a proxy remote function. A remote closure stay alive while it proxy object is up.
 Unlike generator, closure are not destroyed when an exception is raised.
+
+client :
+
+``` python
+from femtorpc.tcp_proxy import TCPProxy
+
+if __name__ == "__main__":
+    with TCPProxy("127.0.0.1", 6666, 100) as proxy:
+        add = proxy.build_add(4)
+        print(f"inc(10) -> {add(10)}")
+```
+
+server :
+
+``` python
+from femtorpc.tcp_daemon import TCPDaemon
+
+if __name__ == "__main__":
+    daemon = TCPDaemon("127.0.0.1", 6666)
+    def build_add(to_add):
+        def add(value):
+            return value + to_add
+        return add
+    
+    daemon.register(build_add)
+
+    try:
+        while True:
+            daemon.run_once(10, True)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        daemon.close()
+```
+
+## Typing
+
+One problem with python is about typing parameters. Well, it is not strictly a problem but on RPC it could. Moreover, it limits cases that would be a problem on the server side.
+
+For more information about typing, you can read this [guide](https://realpython.com/python-type-checking/).
 
 client :
 
