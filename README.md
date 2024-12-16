@@ -210,3 +210,53 @@ if __name__ == "__main__":
     finally:
         daemon.close()
 ```
+
+## Encrypt or compress (or both)
+
+Many unpleasant things can happen on RPC : performance, security... The way this RPC was designed allow to add layer between the RPC clockwish and the network. So you can change the serializer, add encryption and so on. But taking most common case, FemtoRPC contains a module ``serializer`` which provide
+what is basically needed : compression and encryption.
+
+Compression is done with LZ4, one of the best compression algorithm with an amazing compression/speed ratio. In the other hand, encryption is done with Fernet, a state of the art of a set of cryptographic primitives used in the [right way](https://github.com/fernet/spec/blob/master/Spec.md). The only limitation
+here is you will need a 32 bytes binary key to operate. To make it short, they are many way to create a key (passord based, key derivation, key exchange, etc) and it is out of scope of this RPC. 
+
+client :
+
+``` python
+from femtorpc.tcp_proxy import TCPProxy
+from femtorpc.serializer import get_serializer
+
+KEY = b"00000000000000000000000000000000"
+COMPRESSED = True
+
+if __name__ == "__main__":
+    with TCPProxy("127.0.0.1", 6666, 100, **get_serializer(KEY, COMPRESSED)) as proxy:
+        print(f"proxy.add(1,2) -> {proxy.add(1,2)}")
+
+```
+
+server :
+
+``` python
+from femtorpc.tcp_daemon import TCPDaemon
+from femtorpc.serializer import get_serializer
+
+# Obviously, b"0" is **NOT** a good key - just for example purpose only
+KEY = b"00000000000000000000000000000000"
+COMPRESSED = True
+
+if __name__ == "__main__":
+    daemon = TCPDaemon("127.0.0.1", 6666, **get_serializer(KEY, COMPRESSED))
+    
+    def add(a, b):
+        return a + b
+    
+    daemon.register(add)
+
+    try:
+        while True:
+            daemon.run_once(10, True)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        daemon.close()
+```
