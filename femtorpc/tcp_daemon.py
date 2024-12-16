@@ -6,8 +6,8 @@ import dill
 from femtorpc.command_handler import CommandHandler
 
 class TCPDaemon:
-    def __init__(self, hostname:str, port:int, loads=dill.loads, dumps=dill.dumps):
-        self._command_hander = CommandHandler(loads, dumps)
+    def __init__(self, hostname:str, port:int, loads=dill.loads, dumps=dill.dumps, max_volatile:int=1000):
+        self._command_hander = CommandHandler(loads, dumps, max_volatile)
         logging.getLogger(f"{self.__class__.__name__}(tcp://{hostname}:{port}")
         self._context = zmq.Context()
         self._socket = self._context.socket(zmq.REP)

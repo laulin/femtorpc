@@ -9,8 +9,8 @@ from femtorpc.response import Response
 
 
 class CommandHandler:
-    def __init__(self, loads=dill.loads, dumps=dill.dumps):
-        self._wrapper = WrapperWithVolatile()
+    def __init__(self, loads=dill.loads, dumps=dill.dumps, max_volatile:int=1000):
+        self._wrapper = WrapperWithVolatile(max_volatile)
         self._loads = loads
         self._dumps = dumps
         self._log = logging.getLogger(self.__class__.__name__)
