@@ -65,6 +65,21 @@ class TestWrapperWithVolatile(unittest.TestCase):
         # must not work since generator doesn't exist anymore
         _, exception = wrapper.call(f"{generator.id}.__next__")
         self.assertTrue(isinstance(exception, AttributeError))
+
+    def test_generator_call_send(self):
+        def square():
+            x = 1
+            while True:
+                x = yield x**2
+        wrapper = WrapperWithVolatile()
+        wrapper.register(square)
+
+        # prepare the generator
+        generator, _ = wrapper.call("square")
+        wrapper.call(f"{generator.id}.__next__")
+ 
+        results = wrapper.call(f"{generator.id}.send", 10)
+        self.assertEqual(results, (100, None))
     
     def test_generator_auto_del(self):
         def foo():

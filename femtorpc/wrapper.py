@@ -1,6 +1,19 @@
 import inspect
 import logging
 from typing import Tuple, Union
+from collections import namedtuple
+
+# EmptySignature and CreateSignature are used to mock inspect.Signature behaviour.
+# Used in case of empty signature on built-in function
+EmptySignature = namedtuple("EmptySignature", ["args", "kwargs"])
+
+class CreateSignature:
+    def __init__(self, args, kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+    def bind(self, function)->EmptySignature:
+        return EmptySignature(self.args, self.kwargs)
 
 class Wrapper:
     def __init__(self):
@@ -74,10 +87,14 @@ class Wrapper:
         
     def generic_call(self, func:callable, signature, *args, **kwargs)->Tuple[Union[object, None], Union[Exception, None]]:
         if signature is None:
-            signature = inspect.signature(func)
+            try:
+                signature = inspect.signature(func)
+            except ValueError:
+                # is no signature exist, we ignore it
+                signature = CreateSignature(args, kwargs)
         try:
-            params = signature.bind(*args, **kwargs)
-            return (func(*params.args, **params.kwargs), None)
+                params = signature.bind(*args, **kwargs)
+                return (func(*params.args, **params.kwargs), None)
         except Exception as e:
             return (None, e)
         
