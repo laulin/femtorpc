@@ -9,3 +9,7 @@ class ProxifyRemoteCallable:
 
     def __call__(self, *args, **kwargs):
         return self._proxy.handler.call(self._name, *args, **kwargs)
+    
+    def destroy(self):
+        self._proxy.handler.call(f"{self._name}._destroy")
+        self._proxy.remove_volatile(self._name)
