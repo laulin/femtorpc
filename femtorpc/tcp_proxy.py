@@ -5,14 +5,14 @@ import dill
 import zmq
 
 class TCPProxy(ProxyWrapper):
-    def __init__(self, hostname:str, port:int, timeout:int=1000, loads=dill.loads, dumps=dill.dumps):
+    def __init__(self, hostname:str, port:int, timeout:int=1000, loads=dill.loads, dumps=dill.dumps, public:dict=None):
         self._context = zmq.Context()
         self._socket = self._context.socket(zmq.REQ)
         self._socket.connect(f"tcp://{hostname}:{port}")
         self._poller = zmq.Poller()
         self._poller.register(self._socket, zmq.POLLIN)
         self._timeout = timeout
-        super().__init__(self._callback, loads, dumps)
+        super().__init__(self._callback, loads, dumps, public)
 
     def _callback(self, datastream:bytes)->bytes:
         self._socket.send(datastream)

@@ -343,7 +343,51 @@ if __name__ == "__main__":
         async_call.close()
 ```
 
-Here, two function be called : ``do_long_job`` and ``get_long_job``. Running a long job is done with ``do_long_job`` that return an task_id (uuid4). With this id you can try to get the result. If the result is not available, TimeoutError exception is raised.
+## Proxy context
+
+Generators and closures are paired with proxies. If a proxy is deleted, its associated object are also deleted. So here some good practices :
+
+- Keep your proxy as short as possible
+- Use context to prevent any trouble
+
+The may drawback is on proxy creation : it requests info about exposed (public) functions and objects. It may lead to a waste of bandwith. To get around this problem, you can provide exposed objects during proxy creation :
+
+client :
+
+``` python
+from femtorpc.tcp_proxy import TCPProxy
+
+if __name__ == "__main__":
+    with TCPProxy("127.0.0.1", 6666, 100) as proxy:
+        exposed_function = proxy.public
+
+    # ...
+
+    with TCPProxy("127.0.0.1", 6666, 100, public=exposed_function) as proxy_b:
+        print(f"proxy_b.foo(10) -> {proxy_b.foo(10)}")
+     
+```
+
+server :
+
+``` python
+from femtorpc.tcp_daemon import TCPDaemon
+
+if __name__ == "__main__":
+    daemon = TCPDaemon("127.0.0.1", 6666)
+    def foo(x)->int:
+        return x + 1
+    
+    daemon.register(foo)
+
+    try:
+        while True:
+            daemon.run_once(10, True)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        daemon.close()
+```
 
 ## Callback from the client side
 

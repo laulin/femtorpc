@@ -7,10 +7,13 @@ from femtorpc.proxify_callable import ProxifyCallable
 from femtorpc.proxify_object import ProxifyObject
 
 class ProxyWrapper:
-    def __init__(self, callback, loads=dill.loads, dumps=dill.dumps):
+    def __init__(self, callback, loads=dill.loads, dumps=dill.dumps, public:dict=None):
         self._proxy_hander = ProxyHandler(callback, loads, dumps)
         self._log = logging.getLogger(self.__class__.__name__)
-        self._public = self._proxy_hander.public()
+        if public is None:
+            self._public = self._proxy_hander.public()
+        else:
+            self._public = public
         self._volatile = set()
 
     def __getattr__(self, name):
