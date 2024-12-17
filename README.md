@@ -262,6 +262,81 @@ if __name__ == "__main__":
         daemon.close()
 ```
 
+## Long job
+
+If you basically run a sleep in the server side, the ZMQ will timeout. However, sometimes we need to run a fonction that takes many seconds. A simple way is to use concurrent.futures :
+
+client :
+
+``` python
+import time
+import concurrent.futures
+
+from femtorpc.tcp_proxy import TCPProxy
+
+if __name__ == "__main__":
+    with TCPProxy("127.0.0.1", 6666, 100) as proxy:
+        task_id_1 = proxy.do_long_job(1)
+        task_id_2 = proxy.do_long_job(3)
+        
+        time.sleep(0.5)
+
+        try:
+            proxy.get_long_job(task_id_1)
+        except concurrent.futures._base.TimeoutError:
+            print("job not finished")
+
+        time.sleep(0.6)
+        print(f"Results : {proxy.get_long_job(task_id_1)}")
+      
+```
+
+server :
+
+``` python
+import concurrent.futures
+from time import sleep
+from uuid import uuid4
+
+from femtorpc.tcp_daemon import TCPDaemon
+
+if __name__ == "__main__":
+    executor = concurrent.futures.ProcessPoolExecutor(max_workers=2)
+    tasks = dict()
+    daemon = TCPDaemon("127.0.0.1", 6666)
+
+    def long_job(delay):
+        print(f"Starting with delay {delay}")
+        sleep(delay)
+        print(f"Ending with delay {delay}")
+        return (delay+1)**3
+
+    def do_long_job(delay):
+        task = executor.submit(long_job, delay)
+        task_id = uuid4()
+        tasks[task_id] = task
+        return task_id
+    
+    def get_long_job(task_id):
+
+        result = tasks[task_id].result(0)
+        del tasks[task_id]
+  
+    daemon.register(do_long_job)
+    daemon.register(get_long_job)
+
+    try:
+        while True:
+            daemon.run_once(10, True)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        daemon.close()
+        executor.shutdown()
+```
+
+Here, two function be called : ``do_long_job`` and ``get_long_job``. Running a long job is done with ``do_long_job`` that return an task_id (uuid4). With this id you can try to get the result. If the result is not available, TimeoutError exception is raised.
+
 ## Callback from the client side
 
 It can tempting to use callback function provided by the client. This feature is partialy available and the restiction is about the serialization : the must be serializer-compliant. For example, an event driven callbakc, call on server side when something happen, propagated to the client is not possible. This feature,
