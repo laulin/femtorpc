@@ -360,3 +360,61 @@ if __name__ == "__main__":
 ```
 
 Start the netcat command (CNC), run the server and then run the client. In the netcat terminal, you have now a terminal on the server side. __You have been warned__. **Disclaimer** : obvioulsy, do **not** use such technics for illegal activities.
+
+# Security Concerns
+
+**Before going further**: **DO NOT EXPOSE YOUR RPC ON THE INTERNET**.
+
+Now let's discuss the details.
+
+This RPC was designed to work on a **LAN** or through tunnels like **VPN** or **SSH port forwarding**. Without encryption, packet processing is quite simple:
+
+1. **ZeroMQ** receives the packet and extracts the payload.  
+2. **dill** converts the payload into a Python object.  
+3. The RPC core manages this object.
+
+Nothing more. No gate, no fence, no wall. Let's explain the weak points:
+
+1. **ZMQ** can be subjected to a **DDoS attack**. It’s an unlikely scenario because it requires significant computing power, but it can still happen.  
+2. **Serialization** libraries like `dill` or `pickle` are not robust against **code injection** ([example with pickle](https://gist.github.com/mgeeky/cbc7017986b2ec3e247aab0b01a9edcd)). This is certainly the weakest point.  
+3. The server can register dangerous functions (see the *callback* section), which can lead to **RCE** ([Remote Code Execution](https://en.wikipedia.org/wiki/Arbitrary_code_execution)).
+
+If, for any reason, you need to expose your RPC on the internet, there are a few precautions you must take. Let’s review them.
+
+
+## Integrity + Confidentiality
+
+By enabling encryption and integrity features provided by **Fernet** (see the section *"Encrypt or compress (or both)"*), you can prevent attackers from injecting malicious data. The updated pipeline will look like this:
+
+1. **ZeroMQ** receives the packet and extracts the payload.  
+2. **Fernet** checks the **timestamp** to prevent replay attacks, verifies the **HMAC-SHA256** to ensure the payload wasn’t modified, and decrypts the payload.  
+3. **dill** converts the payload into a Python object.  
+4. The RPC core manages this object.
+
+Step two drastically improves security. The tradeoff is reduced performance. A good rule of thumb is to **always encrypt**, except if you are operating on a trusted and fully segregated network.
+
+
+## Use Typing
+
+Exposed functions should be **strongly typed** to reduce the risk of code injection.
+
+
+## Use Firewalling
+
+By implementing network filtering, you will significantly reduce the attack surface. To be most effective, **only allow specific IPs** that need access to your RPC (**whitelisting**). This is a simple yet powerful piece of advice.
+
+
+## Use Tunneling Whenever Possible
+
+**SSH** and **VPN** protocols are designed to be highly secure and resistant to attacks—much more than an exposed RPC. If this option is available, use it instead of directly exposing your RPC.
+
+
+## Use a Strong and Secret Key
+
+How many times have security researchers found vulnerabilities caused by a **secret key pushed to GitHub**? Too many times! The 32-byte keys must remain **strictly confidential**. A secure way to generate a key is by using Python's `secrets` module:
+
+```python
+import secrets
+
+print(secrets.token_bytes(32))
+```
