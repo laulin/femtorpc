@@ -5,16 +5,18 @@ from femtorpc.tcp_proxy import TCPProxy
 
 if __name__ == "__main__":
     with TCPProxy("127.0.0.1", 6666, 100) as proxy:
-        task_id_1 = proxy.do_long_job(1)
-        task_id_2 = proxy.do_long_job(3)
+        async_result_1 = proxy.long_job(1)
+        async_result_2 = proxy.long_job(2)
         
         time.sleep(0.5)
 
         try:
-            proxy.get_long_job(task_id_1)
+            async_result_1()
         except concurrent.futures._base.TimeoutError:
             print("job not finished")
 
         time.sleep(0.6)
-        print(f"Results : {proxy.get_long_job(task_id_1)}")
+        print(f"Results 1 : {async_result_1()}")
+        time.sleep(1)
+        print(f"Results 2 : {async_result_2()}")
 

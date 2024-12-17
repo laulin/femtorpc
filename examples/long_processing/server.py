@@ -4,30 +4,36 @@ from uuid import uuid4
 
 from femtorpc.tcp_daemon import TCPDaemon
 
-if __name__ == "__main__":
-    executor = concurrent.futures.ProcessPoolExecutor(max_workers=2)
-    tasks = dict()
-    daemon = TCPDaemon("127.0.0.1", 6666)
+class AsyncCall:
+    def __init__(self, function, max_workers:int):
+        self._executor = concurrent.futures.ProcessPoolExecutor(max_workers=max_workers)
+        self._tasks = dict()
+        self._function = function
 
+    def do(self, *args, **kwargs):
+        task = self._executor.submit(self._function, *args, **kwargs)
+        task_id = uuid4()
+        self._tasks[task_id] = task
+        def _get_result():
+            result = self._tasks[task_id].result(0)
+            del self._tasks[task_id]
+            return result
+        return _get_result
+
+    def close(self):
+        self._executor.shutdown()
+
+if __name__ == "__main__":
     def long_job(delay):
         print(f"Starting with delay {delay}")
         sleep(delay)
         print(f"Ending with delay {delay}")
         return (delay+1)**3
 
-    def do_long_job(delay):
-        task = executor.submit(long_job, delay)
-        task_id = uuid4()
-        tasks[task_id] = task
-        return task_id
-    
-    def get_long_job(task_id):
+    async_call = AsyncCall(long_job, 2)
+    daemon = TCPDaemon("127.0.0.1", 6666)
 
-        result = tasks[task_id].result(0)
-        del tasks[task_id]
-  
-    daemon.register(do_long_job)
-    daemon.register(get_long_job)
+    daemon.register(async_call.do, "long_job")
 
     try:
         while True:
@@ -36,4 +42,4 @@ if __name__ == "__main__":
         pass
     finally:
         daemon.close()
-        executor.shutdown()
+        async_call.close()

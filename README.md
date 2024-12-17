@@ -276,19 +276,21 @@ from femtorpc.tcp_proxy import TCPProxy
 
 if __name__ == "__main__":
     with TCPProxy("127.0.0.1", 6666, 100) as proxy:
-        task_id_1 = proxy.do_long_job(1)
-        task_id_2 = proxy.do_long_job(3)
+        async_result_1 = proxy.long_job(1)
+        async_result_2 = proxy.long_job(2)
         
         time.sleep(0.5)
 
         try:
-            proxy.get_long_job(task_id_1)
+            async_result_1()
         except concurrent.futures._base.TimeoutError:
             print("job not finished")
 
         time.sleep(0.6)
-        print(f"Results : {proxy.get_long_job(task_id_1)}")
-      
+        print(f"Results 1 : {async_result_1()}")
+        time.sleep(1)
+        print(f"Results 2 : {async_result_2()}")
+     
 ```
 
 server :
@@ -300,30 +302,36 @@ from uuid import uuid4
 
 from femtorpc.tcp_daemon import TCPDaemon
 
-if __name__ == "__main__":
-    executor = concurrent.futures.ProcessPoolExecutor(max_workers=2)
-    tasks = dict()
-    daemon = TCPDaemon("127.0.0.1", 6666)
+class AsyncCall:
+    def __init__(self, function, max_workers:int):
+        self._executor = concurrent.futures.ProcessPoolExecutor(max_workers=max_workers)
+        self._tasks = dict()
+        self._function = function
 
+    def do(self, *args, **kwargs):
+        task = self._executor.submit(self._function, *args, **kwargs)
+        task_id = uuid4()
+        self._tasks[task_id] = task
+        def _get_result():
+            result = self._tasks[task_id].result(0)
+            del self._tasks[task_id]
+            return result
+        return _get_result
+
+    def close(self):
+        self._executor.shutdown()
+
+if __name__ == "__main__":
     def long_job(delay):
         print(f"Starting with delay {delay}")
         sleep(delay)
         print(f"Ending with delay {delay}")
         return (delay+1)**3
 
-    def do_long_job(delay):
-        task = executor.submit(long_job, delay)
-        task_id = uuid4()
-        tasks[task_id] = task
-        return task_id
-    
-    def get_long_job(task_id):
+    async_call = AsyncCall(long_job, 2)
+    daemon = TCPDaemon("127.0.0.1", 6666)
 
-        result = tasks[task_id].result(0)
-        del tasks[task_id]
-  
-    daemon.register(do_long_job)
-    daemon.register(get_long_job)
+    daemon.register(async_call.do, "long_job")
 
     try:
         while True:
@@ -332,7 +340,7 @@ if __name__ == "__main__":
         pass
     finally:
         daemon.close()
-        executor.shutdown()
+        async_call.close()
 ```
 
 Here, two function be called : ``do_long_job`` and ``get_long_job``. Running a long job is done with ``do_long_job`` that return an task_id (uuid4). With this id you can try to get the result. If the result is not available, TimeoutError exception is raised.
