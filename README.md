@@ -184,8 +184,11 @@ from femtorpc.tcp_proxy import TCPProxy
 
 if __name__ == "__main__":
     with TCPProxy("127.0.0.1", 6666, 100) as proxy:
-        add = proxy.build_add(4)
-        print(f"inc(10) -> {add(10)}")
+        print(f"proxy.add(1,2) -> {proxy.add(1,2)}")
+        try:
+            print(f"proxy.add(1,2) -> {proxy.add(1.0,2)}")
+        except Exception as e:
+            print(f"Ooops {type(e)} : {e}")
 ```
 
 server :
@@ -195,12 +198,11 @@ from femtorpc.tcp_daemon import TCPDaemon
 
 if __name__ == "__main__":
     daemon = TCPDaemon("127.0.0.1", 6666)
-    def build_add(to_add):
-        def add(value):
-            return value + to_add
-        return add
     
-    daemon.register(build_add)
+    def add(a:int, b:int)->int:
+        return a + b
+    
+    daemon.register(add)
 
     try:
         while True:
