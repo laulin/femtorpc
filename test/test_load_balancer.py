@@ -12,7 +12,7 @@ class DaemonThread(threading.Thread):
     def __init__(self, daemon:TCPDaemon):
         super().__init__()
         self.running = threading.Event()
-        self.running.set()  # Indique que le thread est actif
+        self.running.set()
         self._daemon = daemon
 
     def run(self):
@@ -111,7 +111,7 @@ class TestLoadBalancer(unittest.TestCase):
 
         daemon_thread_b.stop()
         daemon_thread_a.stop()
-        
+
         daemon_a.close()
         daemon_b.close()
 

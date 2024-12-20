@@ -8,7 +8,7 @@ class DaemonThread(threading.Thread):
     def __init__(self, daemon:TCPDaemon):
         super().__init__()
         self.running = threading.Event()
-        self.running.set()  # Indique que le thread est actif
+        self.running.set()
         self._daemon = daemon
 
     def run(self):
