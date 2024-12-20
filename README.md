@@ -1,6 +1,6 @@
 # femtorpc
 
-FemtoRPC is a minimalist Remote Procedure Call (RPC) library built on ZeroMQ for network communication. It is designed to be simple, robust, and lightweight, enabling efficient interactions between remote processes, with security in mind.
+Small is beautiful, femto is gorgeous ! FemtoRPC is a minimalist Remote Procedure Call (RPC) library built on ZeroMQ for network communication. It is designed to be simple, robust, and lightweight, enabling efficient interactions between remote processes, with security in mind.
 
 # Installation
 
@@ -547,3 +547,7 @@ import secrets
 
 print(secrets.token_bytes(32))
 ```
+
+## Mind the binding
+
+If possible, do not use "*" for tcp binding. Please prefere specific IP (eg 192.168.0.1) or localhost (127.0.0.1) if your RPC works only in local. In a perfect world, if your RPC is local, use unix socket ("ipc://).
