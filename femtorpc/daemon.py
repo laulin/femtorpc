@@ -14,7 +14,7 @@ class Daemon:
         if mode == "bind":
             self._socket.bind(adress)
         elif mode == "connect": 
-            self._socket.conect(adress)
+            self._socket.connect(adress)
         else:
             raise Exception(f"mode '{mode}' is not supported")
         self._poller = zmq.Poller()
