@@ -391,6 +391,119 @@ if __name__ == "__main__":
         daemon.close()
 ```
 
+## Scalability
+
+There are many reasons to use ZQM over typical sockets (unix, tcp, ...). Obviously, the reliability and the simplicity could be points. But it also allow to play other possibilities of such sockets.
+For example, you can work with router/dealer and create a load balancer. This way, your RPC become scalable (multiprocessing, multi host). 
+
+This example calls foo() and get which daemons is asked. 
+
+client :
+
+``` python
+from collections import Counter
+from pprint import pprint
+
+from femtorpc.tcp_proxy import TCPProxy
+
+if __name__ == "__main__":
+    # This part call 100 times the foo() function, ignoring there are multiple processes.
+    # Counter is used to show how spread calls are done on multiple processes.
+    with TCPProxy("127.0.0.1", 6666) as proxy:
+        count_process = Counter()
+        for i in range(100):
+            count_process[proxy.foo()] += 1
+
+        pprint(count_process)
+     
+```
+
+server :
+
+``` python
+from multiprocessing import Process, Event
+import threading
+import time
+
+from femtorpc.daemon import Daemon
+from femtorpc.load_balancer import LoadBalancer
+
+LOAD_BALANCER_INPUT = "tcp://127.0.0.1:6666"
+LOAD_BALANCER_OUTPUT = "ipc:///tmp/scalable"
+NUMBER_OF_PROCESS = 4
+
+
+class DaemonProcess(Process):
+    # Real process used to menage each RPC daemon
+    def __init__(self, daemon_id):
+        super().__init__()
+        self.running = Event()
+        self.running.set()
+        self._daemon = None
+        self._daemon_id = daemon_id
+
+    def run(self):
+        # each daemon return daemon_x on foo() call
+        def foo():
+            return f"Daemon_{self._daemon_id}"
+        
+        self._daemon = Daemon(LOAD_BALANCER_OUTPUT, mode="connect")
+        self._daemon.register(foo)
+        try:
+            while self.running.is_set():
+                self._daemon.run_once(10, True)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            self._daemon.close()
+
+    def stop(self):
+        self.running.clear()
+        self.join()
+
+class LoadBalancerThread(threading.Thread):
+    # We use a simple thread for the load balancer
+    def __init__(self, load_balancer:LoadBalancer):
+        super().__init__()
+        self._load_balancer = load_balancer
+
+    def run(self):
+        self._load_balancer.run()
+        
+
+if __name__ == "__main__":
+    # starting the entry point of the RPC server
+    lb = LoadBalancer(LOAD_BALANCER_INPUT, LOAD_BALANCER_OUTPUT)
+    lb_thread = LoadBalancerThread(lb)
+    lb_thread.start()
+    
+    # creating daemons
+    daemons = []
+    for i in range(NUMBER_OF_PROCESS):
+        
+        daemon_process = DaemonProcess(i)
+        daemon_process.start()
+        daemons.append(daemon_process)
+
+    # wait loop
+    try:
+        while True:
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        # cleaning
+        for daemon_process in daemons:
+            daemon_process.stop()
+
+        lb.close()
+        lb_thread.join()
+```
+
+This example is also a good introduction of Daemon and Proxy, the base classes of all Daemons/Proxyes. With them you can manage ipc or tcp, with binding or connect. TCPProxy and TCPDaemon are just syntaxic sugar ! 
+
+For more information about ZMQ, please refere to the [guide](https://zguide.zeromq.org/).
+
 ## Callback from the client side
 
 It can tempting to use callback function provided by the client. This feature is partialy available and the restiction is about the serialization : the must be serializer-compliant. For example, an event driven callbakc, call on server side when something happen, propagated to the client is not possible. This feature,
